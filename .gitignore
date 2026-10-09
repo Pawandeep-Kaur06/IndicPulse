@@ -1,0 +1,32 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Data files: keep datasets local
+data/raw/
+data/processed/*.csv
+data/processed/*.parquet
+data/processed/*.json
+data/processed/*.jsonl
+
+# Trained models and generated results
+models/
+results/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# Environment variables / secrets
+.env
+*.env
+
+# OS files
+.DS_Store
+Thumbs.db
