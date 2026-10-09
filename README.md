@@ -4,6 +4,17 @@ IndicPulse is an NLP research project for identifying English, Hinglish, and Pun
 
 ## Current Progress
 
+### Emotion Classification
+
+- Source dataset: EmoHinD-58K
+- Source task: Multi-label, fine-grained Hindi emotion recognition
+- Baseline subset: 8 single-label emotion classes
+- Classes: admiration, amusement, anger, annoyance, approval, gratitude, love, neutral
+- Model: Character-level TF-IDF + Logistic Regression with balanced class weights
+- Validation accuracy: 64.69%
+- Validation macro F1: 0.6093
+- Note: Multi-label examples and rare-label examples were excluded from this first baseline.
+
 ### Language Identification
 
 - Classes: English, Hinglish, Punglish
