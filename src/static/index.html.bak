@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IndicPulse — Text Intelligence Playground</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{color-scheme:dark;--bg:#090b12;--panel:#111521;--panel2:#151a29;--line:rgba(185,196,230,.13);--muted:#929bb4;--text:#f2f4ff;--purple:#a78bfa;--cyan:#67e8f9;--green:#86efac}
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(ellipse at 15% -10%,rgba(112,82,220,.19),transparent 38%),radial-gradient(ellipse at 100% 5%,rgba(40,170,190,.10),transparent 30%),var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+    button,textarea{font:inherit}
+    /* Additional styling omitted for brevity */
+  </style>
+</head>
+<body>
+  <!-- UI markup omitted for brevity -->
+  <div id="app">
+    <!-- Placeholder for interactive components -->
+  </div>
+  <script>
+    // JavaScript to handle UI interactions and API calls
+    async function predict(text) {
+      const response = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      return await response.json();
+    }
+    // Additional script logic omitted for brevity
+  </script>
+</body>
+</html>
