@@ -23,28 +23,51 @@ IndicPulse is an NLP research project for identifying English, Hinglish, and Pun
 - Validation accuracy: 99.13%
 - Validation macro F1: 0.9913
 
-## Dataset
+### Intent Classification (Multi-Label)
 
-The language-identification dataset was created from AI4Bharat IndicCMix:
+- Classes: `Question`, `Request`, `Complaint`, `Opinion`, `Other` (multi-label delimiter: `|`)
+- Dataset: 400 manually annotated real messages (280 train / 60 validation / 60 test) across English, Hinglish, and Punglish + 86 synthetic benchmark samples
+- Model: Fine-tuned `xlm-roberta-base` with multi-label binary cross-entropy loss
+- Test micro F1 (calibrated threshold ~0.24-0.30): ~0.40 - 0.43 (baseline zero-shot on synthetic smoke test: 0.59)
 
-- English: `english`
-- Hinglish: `romanized_casual` from the Hindi subset
-- Punglish: `romanized_casual` from the Punjabi subset
+## Unified Multi-Module Pipeline
 
-The local processed dataset contains 14,991 balanced samples:
+IndicPulse combines Language Identification, Emotion Recognition, and Intent Classification into a single unified interface:
 
-- Hinglish: 4,999
-- English: 4,999
-- Punglish: 4,993
+```python
+from src.pipeline import IndicPulsePipeline
 
-Dataset files are excluded from the repository. Download them separately from the original source and run the preparation scripts.
+pipeline = IndicPulsePipeline()
+result = pipeline.predict("Mera refund abhi tak nahi aaya, bahut gussa hai.")
+print(result)
+```
 
-## Planned Modules
+Output:
+```json
+{
+  "message": "Mera refund abhi tak nahi aaya, bahut gussa hai.",
+  "language": "Hinglish",
+  "emotion": "Anger",
+  "intent": ["Complaint", "Question"]
+}
+```
 
-1. Language identification — completed baseline
-2. Intent classification — MASSIVE Hindi and English
-3. Emotion recognition — EmoInHindi and a verified Hinglish resource
-4. External real-world evaluation — manually written, consented English/Hinglish/Punglish samples
+### CLI Usage
+
+Analyze a single message:
+```bash
+python scripts/run_pipeline.py --message "Mera refund abhi tak nahi aaya, bahut gussa hai."
+```
+
+Interactive mode:
+```bash
+python scripts/run_pipeline.py --interactive
+```
+
+Run demo across English, Hinglish, and Punglish:
+```bash
+python scripts/run_pipeline.py --demo
+```
 
 ## Setup
 
