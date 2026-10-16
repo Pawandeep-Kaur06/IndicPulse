@@ -1,7 +1,12 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-df = pd.read_csv("indicpulse_language_data.csv")
+from pathlib import Path
+
+DATA_DIR = Path("data/processed")
+input_file = DATA_DIR / "indicpulse_language_data.csv" if (DATA_DIR / "indicpulse_language_data.csv").exists() else Path("indicpulse_language_data.csv")
+
+df = pd.read_csv(input_file)
 
 train_df, temp_df = train_test_split(
     df,
@@ -17,9 +22,10 @@ val_df, test_df = train_test_split(
     random_state=42
 )
 
-train_df.to_csv("train.csv", index=False, encoding="utf-8")
-val_df.to_csv("validation.csv", index=False, encoding="utf-8")
-test_df.to_csv("test.csv", index=False, encoding="utf-8")
+out_dir = DATA_DIR if DATA_DIR.exists() else Path(".")
+train_df.to_csv(out_dir / "train.csv", index=False, encoding="utf-8")
+val_df.to_csv(out_dir / "validation.csv", index=False, encoding="utf-8")
+test_df.to_csv(out_dir / "test.csv", index=False, encoding="utf-8")
 
 print("Train shape:", train_df.shape)
 print("Validation shape:", val_df.shape)
