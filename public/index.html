@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IndicPulse — Text Intelligence Playground</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090b12;
+      --line: rgba(185, 196, 230, .13);
+      --muted: #929bb4;
+      --text: #f2f4ff;
+      --purple: #a78bfa;
+      --cyan: #67e8f9;
+      --green: #86efac;
+      --amber: #f5d58b
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      margin: 0
+    }
+
+    body {
+      background: radial-gradient(ellipse at 15% -10%, rgba(112, 82, 220, .19), transparent 38%), radial-gradient(ellipse at 100% 5%, rgba(40, 170, 190, .10), transparent 30%), var(--bg);
+      background-attachment: fixed;
+      color: var(--text);
+      font: 400 14px/1.5 'DM Sans', sans-serif;
+      min-height: 100vh
+    }
+
+    button,
+    textarea,
+    input {
+      font: inherit;
+      color: inherit
+    }
+
+    button {
+      cursor: pointer
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--purple);
+      outline-offset: 2px
+    }
+
+    .shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 22px 20px 40px
+    }
+
+    /* top bar */
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #9b83ff, #54d9e8);
+      display: grid;
+      place-items: center;
+      color: #0b1020;
+      font-size: 21px;
+      font-weight: 700
+    }
+
+    .brand b {
+      font: 700 18px 'Space Grotesk', sans-serif;
+      letter-spacing: -.4px;
+      display: block;
+      line-height: 1.1
+    }
+
+    .brand span {
+      font-size: 11px;
+      color: var(--muted)
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 12px;
+      background: #ffffff05
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #fbbf24;
+      flex: none
+    }
+
+    h1 {
+      font: 700 clamp(24px, 3.6vw, 34px)/1.12 'Space Grotesk', sans-serif;
+      letter-spacing: -1px;
+      margin: 0 0 6px
+    }
+
+    .grad {
+      background: linear-gradient(90deg, #c4b5fd, #67e8f9);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent
+    }
+
+    .lede {
+      margin: 0 0 20px;
+      color: var(--muted);
+      max-width: 62ch
+    }
+
+    /* cards */
+    .card {
+      border: 1px solid var(--line);
+      background: linear-gradient(145deg, rgba(21, 26, 41, .96), rgba(13, 17, 28, .96));
+      border-radius: 18px;
+      padding: 18px
+    }
+
+    .label {
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      height: 96px;
+      margin-top: 8px;
+      resize: none;
+      border: 1px solid rgba(167, 139, 250, .22);
+      border-radius: 12px;
+      background: #090d17;
+      padding: 14px 15px;
+      line-height: 1.6;
+      outline: none;
+      font-size: 15px
+    }
+
+    textarea:focus {
+      border-color: #a78bfa99;
+      box-shadow: 0 0 0 3px #a78bfa15
+    }
+
+    .inrow {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 14px;
+      margin-top: 14px;
+      flex-wrap: wrap
+    }
+
+    .samples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    .sample {
+      border: 1px solid var(--line);
+      background: #ffffff04;
+      color: #c8cde0;
+      border-radius: 999px;
+      padding: 7px 13px;
+      font-size: 12px
+    }
+
+    .sample:hover,
+    .sample.active {
+      border-color: #a78bfa77;
+      background: #a78bfa14;
+      color: #e8e1ff
+    }
+
+    .go {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .meta {
+      font-size: 11px;
+      color: var(--muted);
+      min-width: 96px;
+      text-align: right;
+      font-variant-numeric: tabular-nums
+    }
+
+    .primary {
+      border: 0;
+      border-radius: 11px;
+      background: linear-gradient(105deg, #b4a0ff, #73e3ee);
+      color: #101222;
+      padding: 11px 20px;
+      font-weight: 700;
+      font-size: 13px;
+      white-space: nowrap
+    }
+
+    .primary:hover {
+      filter: brightness(1.07)
+    }
+
+    .primary:disabled {
+      opacity: .55;
+      cursor: progress
+    }
+
+    /* reserved message line: never changes layout */
+    .msg {
+      height: 20px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis
+    }
+
+    .msg.err {
+      color: #fca5a5
+    }
+
+    /* results: three equal, fixed-size panels */
+    .results {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+      transition: opacity .15s
+    }
+
+    .results.loading {
+      opacity: .55
+    }
+
+    .panel {
+      height: 350px;
+      display: flex;
+      flex-direction: column
+    }
+
+    .phead {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px
+    }
+
+    .pico {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      background: #a78bfa14;
+      color: #c4b5fd;
+      flex: none
+    }
+
+    .panel:nth-child(2) .pico {
+      background: #fb923c12;
+      color: #fdba74
+    }
+
+    .panel:nth-child(3) .pico {
+      background: #67e8f912;
+      color: var(--cyan)
+    }
+
+    .phead h2 {
+      margin: 0;
+      font: 600 14px 'Space Grotesk', sans-serif
+    }
+
+    .big {
+      font: 600 26px/1.15 'Space Grotesk', sans-serif;
+      letter-spacing: -.5px;
+      height: 32px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .big.dim {
+      color: #6b7390
+    }
+
+    .tagline {
+      height: 24px;
+      margin: 6px 0 14px;
+      display: flex;
+      align-items: center
+    }
+
+    .tag {
+      font-size: 10.5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      visibility: hidden
+    }
+
+    .tag.show {
+      visibility: visible
+    }
+
+    .tag.warn {
+      color: var(--amber);
+      border-color: #fbbf2444;
+      background: #fbbf2410
+    }
+
+    .rows {
+      display: grid;
+      gap: 11px
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 76px 1fr 44px;
+      gap: 10px;
+      align-items: center;
+      font-size: 12px;
+      color: #aab2c8;
+      height: 20px
+    }
+
+    .row.hit {
+      color: var(--text);
+      font-weight: 600
+    }
+
+    .track {
+      position: relative;
+      height: 7px;
+      border-radius: 4px;
+      background: #ffffff10
+    }
+
+    .fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      border-radius: 4px;
+      background: var(--c, #6b7390);
+      transition: width .35s ease
+    }
+
+    .row.hit .fill {
+      background: var(--c, linear-gradient(90deg, #a78bfa, #67e8f9))
+    }
+
+    .tick {
+      position: absolute;
+      top: -4px;
+      bottom: -4px;
+      width: 2px;
+      background: #f2f4ffaa;
+      border-radius: 1px
+    }
+
+    .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted)
+    }
+
+    .note {
+      margin-top: auto;
+      padding-top: 12px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+      min-height: 52px
+    }
+
+    .src {
+      font-size: 12px;
+      color: #c8cde0;
+      min-height: 38px;
+      margin-top: 6px
+    }
+
+    .legendline {
+      font-size: 11px;
+      color: var(--muted)
+    }
+
+    /* developer details */
+    details {
+      margin-top: 14px
+    }
+
+    summary {
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 4px 2px
+    }
+
+    .dev {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 10px
+    }
+
+    pre {
+      margin: 6px 0 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: #090d17;
+      color: #aab5d1;
+      font: 11px/1.65 ui-monospace, Consolas, monospace;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      max-height: 220px;
+      overflow: auto;
+      min-height: 60px
+    }
+
+    .ep {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .ep input {
+      flex: 1;
+      min-width: 0;
+      background: #090d17;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 7px 10px
+    }
+
+    footer {
+      margin-top: 22px;
+      font-size: 11px;
+      color: #677089;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap
+    }
+
+    @media(max-width:900px) {
+      .results {
+        grid-template-columns: 1fr
+      }
+
+      .panel {
+        height: auto;
+        min-height: 0
+      }
+
+      .dev {
+        grid-template-columns: 1fr
+      }
+
+      .status span.t {
+        display: none
+      }
+    }
+
+    @media(max-width:480px) {
+      .go {
+        width: 100%;
+        justify-content: space-between
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+      * {
+        transition: none !important
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="shell">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">∿</div>
+        <div><b>IndicPulse</b><span>Multilingual text understanding</span></div>
+      </div>
+      <div class="status"><span class="dot" id="dot"></span><span class="t" id="status">Pipeline not checked yet</span>
+      </div>
+    </header>
+
+    <h1>Text that speaks many languages. <span class="grad">One place to understand it.</span></h1>
+    <p class="lede">Type an English, Hinglish or Punglish message. Three separate modules read it: language, emotion and
+      intent.</p>
+
+    <section class="card">
+      <label class="label" for="message">Input message</label>
+      <textarea id="message" maxlength="2000"
+        placeholder="Type English, Hinglish, or Punglish text…">Mera refund abhi tak nahi aaya, bahut gussa hai.</textarea>
+      <div class="inrow">
+        <div class="samples">
+          <button class="sample active" type="button"
+            data-text="Mera refund abhi tak nahi aaya, bahut gussa hai.">Hinglish complaint</button>
+          <button class="sample" type="button" data-text="Kal exam kinne vaje aa?">Punglish question</button>
+          <button class="sample" type="button" data-text="Could you please cancel my order?">English request</button>
+        </div>
+        <div class="go">
+          <span class="meta" id="meta">0 / 2000</span>
+          <button class="primary" id="analyze" type="button">Analyze message</button>
+        </div>
+      </div>
+      <div class="msg" id="msg" role="status"></div>
+    </section>
+
+    <section class="results" id="results" aria-live="polite">
+      <article class="card panel">
+        <div class="phead">
+          <div class="pico">◎</div>
+          <h2>Language</h2>
+        </div>
+        <div class="big dim" id="lang">—</div>
+        <div class="tagline"><span class="tag" id="langtag"></span></div>
+        <div class="rows" id="langrows"></div>
+        <div class="note">Three project categories. A low top score means the label is uncertain.</div>
+      </article>
+
+      <article class="card panel">
+        <div class="phead">
+          <div class="pico">♡</div>
+          <h2>Emotion</h2>
+        </div>
+        <div class="big dim" id="emo">—</div>
+        <div class="src" id="emosrc">Waiting for a result.</div>
+        <div class="note">Roman-script text is matched against a keyword list. Devanagari text goes to a trained Hindi
+          model. Only eight emotion labels exist, so other emotions can't be reported.</div>
+      </article>
+
+      <article class="card panel">
+        <div class="phead">
+          <div class="pico">⌘</div>
+          <h2>Intent</h2>
+        </div>
+        <div class="big dim" id="intlabel">—</div>
+        <div class="tagline"><span class="legendline">Tick = threshold · dot = crossed it</span></div>
+        <div class="rows" id="introws"></div>
+        <div class="note">Scores run 0 to 1 and are model outputs, not calibrated probabilities.</div>
+      </article>
+    </section>
+
+    <details>
+      <summary>Developer details</summary>
+      <div class="dev">
+        <div>
+          <div class="label">Request</div>
+          <pre id="req"></pre>
+        </div>
+        <div>
+          <div class="label">Raw response</div>
+          <pre id="raw">No response yet.</pre>
+        </div>
+      </div>
+      <div class="ep"><label for="ep">Endpoint</label><input id="ep" value="/predict" spellcheck="false"></div>
+    </details>
+
+    <footer><span>INDICPULSE</span><span>Results come only from your running pipeline</span></footer>
+  </main>
+
+  <script>
+    const THRESH = { Complaint: .24, Question: .24, Request: .30, Opinion: .25, Other: .27 };
+    const INTENTS = ['Complaint', 'Opinion', 'Other', 'Question', 'Request'];
+    const LANGS = { English: '#67e8f9', Hinglish: '#a78bfa', Punglish: '#86efac' };
+    const LOW_LANG = 0.6;
+    const SRC = { 'hindi-model': 'Predicted by the Hindi emotion model.', 'lexicon': 'Matched a keyword in the lexicon. This is not a trained model.', 'none': 'Nothing in the message matched, which does not mean it is neutral.' };
+    const $ = id => document.getElementById(id);
+    const message = $('message'), btn = $('analyze'), results = $('results');
+    const pct = v => (v * 100).toFixed(1) + '%';
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e };
+
+    function buildRows(box, names, color, thr) {
+      names.forEach(n => {
+        const r = mk('div', 'row'); r.dataset.n = n;
+        const tr = mk('div', 'track'), f = mk('div', 'fill');
+        if (color) f.style.setProperty('--c', color[n]);
+        tr.appendChild(f);
+        if (thr && thr[n] != null) { const t = mk('div', 'tick'); t.style.left = thr[n] * 100 + '%'; t.title = 'Threshold ' + thr[n]; tr.appendChild(t) }
+        r.append(mk('span', null, n), tr, mk('span', 'num', '—')); box.appendChild(r);
+      });
+    }
+    buildRows($('langrows'), Object.keys(LANGS), LANGS);
+    buildRows($('introws'), INTENTS, null, THRESH);
+
+    function setRows(box, scores, hit) {
+      box.querySelectorAll('.row').forEach(r => {
+        const v = scores && scores[r.dataset.n];
+        r.classList.toggle('hit', !!hit && hit.has(r.dataset.n));
+        r.querySelector('.fill').style.width = v == null ? '0%' : (v * 100) + '%';
+        r.querySelector('.num').textContent = v == null ? '—' : (box.id === 'langrows' ? pct(v) : v.toFixed(2));
+      });
+    }
+    function setBig(id, text, dim) { const e = $(id); e.textContent = text; e.classList.toggle('dim', !!dim); e.title = text }
+
+    function reset() {
+      setBig('lang', '—', true); setBig('emo', '—', true); setBig('intlabel', '—', true);
+      $('langtag').className = 'tag'; $('emosrc').textContent = 'Waiting for a result.';
+      setRows($('langrows')); setRows($('introws'));
+    }
+    function render(d) {
+      const det = d.details || {}, ls = det.language_scores || {}, sc = det.intent_scores || {};
+      const top = Math.max(0, ...Object.values(ls));
+      setBig('lang', d.language || 'Unknown', !d.language);
+      const tag = $('langtag');
+      if (top) { tag.textContent = top < LOW_LANG ? 'Low confidence · ' + pct(top) : 'Top score · ' + pct(top); tag.className = 'tag show' + (top < LOW_LANG ? ' warn' : '') }
+      else tag.className = 'tag';
+      setRows($('langrows'), ls, new Set([d.language]));
+      const src = d.source && d.source.emotion;
+      if (src === 'none') setBig('emo', 'No emotion cue', true); else setBig('emo', d.emotion || 'Unknown', !d.emotion);
+      $('emosrc').textContent = SRC[src] || '';
+      const hit = new Set(d.intent || []);
+      setBig('intlabel', (d.intent || []).join(' · ') || 'None', !(d.intent || []).length);
+      setRows($('introws'), sc, hit);
+    }
+
+    function say(t, err) { const m = $('msg'); m.textContent = t || ''; m.className = 'msg' + (err ? ' err' : ''); m.title = t || '' }
+    function setStatus(ok, t) { $('status').textContent = t; const d = $('dot'); d.style.background = ok ? '#86efac' : '#f87171'; d.style.boxShadow = '0 0 10px ' + (ok ? '#86efac66' : '#f8717166') }
+
+    function refresh() {
+      $('meta').textContent = message.value.length + ' / 2000';
+      $('req').textContent = JSON.stringify({ text: message.value, message: message.value }, null, 2);
+    }
+    async function analyze() {
+      const text = message.value.trim();
+      say('');
+      if (!text) { say('Enter a message first. Blank input is not analysed.', true); return }
+      btn.disabled = true; results.classList.add('loading'); const t0 = performance.now();
+      try {
+        const res = await fetch($('ep').value, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, message: text }) });
+        if (!res.ok) throw new Error('status ' + res.status);
+        const d = await res.json();
+        render(d); setStatus(true, 'Pipeline connected');
+        $('meta').textContent = Math.round(performance.now() - t0) + ' ms';
+        $('raw').textContent = JSON.stringify(d, null, 2);
+      } catch (e) {
+        reset(); setStatus(false, 'Pipeline not reachable');
+        say('No result from ' + $('ep').value + ' (' + e.message + '). Check the backend and endpoint.', true);
+        $('raw').textContent = 'No response.';
+      } finally { btn.disabled = false; results.classList.remove('loading') }
+    }
+    message.addEventListener('input', () => { document.querySelectorAll('.sample').forEach(b => b.classList.remove('active')); refresh() });
+    document.querySelectorAll('.sample').forEach(b => b.addEventListener('click', () => {
+      message.value = b.dataset.text; document.querySelectorAll('.sample').forEach(x => x.classList.toggle('active', x === b)); refresh();
+    }));
+    btn.addEventListener('click', analyze);
+    message.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyze() });
+    refresh();
+  </script>
+</body>
+
+</html>
