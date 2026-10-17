@@ -562,8 +562,9 @@
         </div>
         <div class="big dim" id="lang">—</div>
         <div class="tagline"><span class="tag" id="langtag"></span></div>
+        <div class="src" id="langsrc">Waiting for a result.</div>
         <div class="rows" id="langrows"></div>
-        <div class="note">Three project categories. A low top score means the label is uncertain.</div>
+        <div class="note">The label and score bars are local; close scores are treated as uncertain and may be checked by Gemini.</div>
       </article>
 
       <article class="card panel">
@@ -583,11 +584,13 @@
           <h2>Intent</h2>
         </div>
         <div class="big dim" id="intlabel">—</div>
-        <div class="tagline"><span class="legendline">Tick = threshold · dot = crossed it</span></div>
+        <div class="tagline"><span class="legendline" id="intentlegend">Tick = local threshold · dot = crossed it</span></div>
+        <div class="src" id="intsrc">Waiting for a result.</div>
         <div class="rows" id="introws"></div>
-        <div class="note">Scores run 0 to 1 and are model outputs, not calibrated probabilities.</div>
+        <div class="note" id="intnote">Bars show local XLM-R scores. These scores are not calibrated probabilities.</div>
       </article>
     </section>
+    <div class="legendline" id="fallbackmsg" role="status"></div>
 
     <details>
       <summary>Developer details</summary>
@@ -612,7 +615,15 @@
     const INTENTS = ['Complaint', 'Opinion', 'Other', 'Question', 'Request'];
     const LANGS = { English: '#67e8f9', Hinglish: '#a78bfa', Punglish: '#86efac' };
     const LOW_LANG = 0.6;
-    const SRC = { 'hindi-model': 'Predicted by the Hindi emotion model.', 'lexicon': 'Matched a keyword in the lexicon. This is not a trained model.', 'none': 'Nothing in the message matched, which does not mean it is neutral.' };
+    const SOURCE_LABELS = {
+      local_language_model: 'Source: local language model',
+      local_keyword_lexicon: 'Source: local keyword matching',
+      local_hindi_model: 'Source: local Hindi model',
+      local_no_signal: 'Source: no local emotion cue',
+      local_xlm_roberta: 'Source: local XLM-R model',
+      gemini_api: 'Source: Gemini API fallback',
+      not_run: 'Not run'
+    };
     const $ = id => document.getElementById(id);
     const message = $('message'), btn = $('analyze'), results = $('results');
     const pct = v => (v * 100).toFixed(1) + '%';
@@ -644,6 +655,8 @@
     function reset() {
       setBig('lang', '—', true); setBig('emo', '—', true); setBig('intlabel', '—', true);
       $('langtag').className = 'tag'; $('emosrc').textContent = 'Waiting for a result.';
+      $('langsrc').textContent = 'Waiting for a result.'; $('intsrc').textContent = 'Waiting for a result.';
+      $('fallbackmsg').textContent = '';
       setRows($('langrows')); setRows($('introws'));
     }
     function render(d) {
@@ -653,13 +666,42 @@
       const tag = $('langtag');
       if (top) { tag.textContent = top < LOW_LANG ? 'Low confidence · ' + pct(top) : 'Top score · ' + pct(top); tag.className = 'tag show' + (top < LOW_LANG ? ' warn' : '') }
       else tag.className = 'tag';
-      setRows($('langrows'), ls, new Set([d.language]));
-      const src = d.source && d.source.emotion;
-      if (src === 'none') setBig('emo', 'No emotion cue', true); else setBig('emo', d.emotion || 'Unknown', !d.emotion);
-      $('emosrc').textContent = SRC[src] || '';
+      setRows($('langrows'), ls, new Set([det.local_language_prediction || d.language]));
+      const src = d.source || {};
+      setBig('emo', d.emotion || 'Unknown', !d.emotion);
+      $('langsrc').textContent = SOURCE_LABELS[src.language] || 'Source unavailable';
+      $('emosrc').textContent = SOURCE_LABELS[src.emotion] || 'Source unavailable';
       const hit = new Set(d.intent || []);
       setBig('intlabel', (d.intent || []).join(' · ') || 'None', !(d.intent || []).length);
+      $('intsrc').textContent = SOURCE_LABELS[src.intent] || 'Source unavailable';
+      const geminiIntent = src.intent === 'gemini_api';
+      $('intentlegend').textContent = geminiIntent ? 'Bars show Gemini confidence estimates' : 'Tick = local threshold · dot = crossed it';
+      $('intnote').textContent = geminiIntent
+        ? 'Bars show Gemini confidence estimates for each intent. They are not calibrated probabilities.'
+        : 'Bars show local XLM-R scores. These scores are not calibrated probabilities.';
+      $('introws').querySelectorAll('.tick').forEach(tick => { tick.hidden = geminiIntent });
       setRows($('introws'), sc, hit);
+      const fb = d.fallback || {};
+      const reasons = (fb.reasons || []).join(' and ').replaceAll('_', ' ');
+      const fallbackMessages = {
+        not_needed: 'Gemini fallback was not needed; local predictions are shown.',
+        unavailable: fb.reason === 'missing_api_key' ? 'Gemini fallback was needed, but GEMINI_API_KEY is not configured; local predictions are shown.' : 'Gemini fallback is unavailable; local predictions are shown.',
+        failed: 'Gemini request failed; local predictions are shown.',
+        rejected_invalid_response: 'Gemini returned labels outside the supported format; local predictions are shown.'
+      };
+      if (fb.status === 'succeeded') {
+        const fields = (fb.used_for || []).join(', ') || 'no fields';
+        const confirmed = (fb.confirmed_by_gemini || []).join(', ');
+        const suppliedText = (fb.used_for || []).length
+          ? 'Gemini supplied: ' + fields + '.'
+          : '';
+        const confirmedText = confirmed
+          ? ' Gemini agreed with the local prediction for: ' + confirmed + '.'
+          : '';
+        $('fallbackmsg').textContent = (suppliedText + confirmedText).trim();
+      } else {
+        $('fallbackmsg').textContent = fallbackMessages[fb.status] || (reasons ? 'Gemini fallback status unavailable.' : '');
+      }
     }
 
     function say(t, err) { const m = $('msg'); m.textContent = t || ''; m.className = 'msg' + (err ? ' err' : ''); m.title = t || '' }

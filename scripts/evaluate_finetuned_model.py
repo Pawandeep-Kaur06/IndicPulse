@@ -9,10 +9,10 @@ MODEL_DIR = "models/intent-xlmr-final"
 LABELS = ["Complaint", "Opinion", "Other", "Question", "Request"]
 
 DEFAULT_THRESHOLDS = {
-    "Complaint": 0.24,
-    "Question": 0.24,
-    "Request": 0.30,
-    "Opinion": 0.25,
+    "Complaint": 0.34,
+    "Question": 0.29,
+    "Request": 0.32,
+    "Opinion": 0.27,
     "Other": 0.27,
 }
 
@@ -25,6 +25,11 @@ def parse_args():
         "--test-file",
         default="data/processed/intent_test.csv",
         help="Path to evaluation CSV",
+    )
+    parser.add_argument(
+        "--model-dir",
+        default=MODEL_DIR,
+        help="Path to a fine-tuned model checkpoint",
     )
     parser.add_argument(
         "--threshold",
@@ -50,9 +55,9 @@ def to_vector(labels):
 
 def main():
     args = parse_args()
-    print(f"Loading model from {MODEL_DIR}...")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
-    model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR)
+    print(f"Loading model from {args.model_dir}...")
+    tokenizer = AutoTokenizer.from_pretrained(args.model_dir)
+    model = AutoModelForSequenceClassification.from_pretrained(args.model_dir)
     model.eval()
 
     thresholds = dict(DEFAULT_THRESHOLDS)

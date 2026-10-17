@@ -1,9 +1,8 @@
 import pandas as pd
-import numpy as np
-import torch
 from transformers import (
     AutoTokenizer,
     AutoModelForSequenceClassification,
+    DataCollatorWithPadding,
     TrainingArguments,
     Trainer,
 )
@@ -19,8 +18,9 @@ def load_data(path):
     labels = []
     for intent in df["intent"]:
         vector = [0.0] * len(LABELS)
-        for label in intent.split("|"):
-            vector[LABEL_TO_ID[label.strip()]] = 1.0
+        if intent.strip():
+            for label in intent.split("|"):
+                vector[LABEL_TO_ID[label.strip()]] = 1.0
         labels.append(vector)
     return Dataset.from_dict({"text": texts, "labels": labels})
 
@@ -34,7 +34,6 @@ def tokenize(batch):
     return tokenizer(
         batch["text"],
         truncation=True,
-        padding="max_length",
         max_length=128,
     )
 
@@ -48,24 +47,8 @@ model = AutoModelForSequenceClassification.from_pretrained(
     problem_type="multi_label_classification",
 )
 
-def compute_metrics(eval_pred):
-    logits, labels = eval_pred
-    probabilities = torch.sigmoid(torch.tensor(logits)).numpy()
-    predictions = (probabilities >= 0.5).astype(int)
-    true = np.array(labels)
-
-    tp = ((predictions == 1) & (true == 1)).sum()
-    fp = ((predictions == 1) & (true == 0)).sum()
-    fn = ((predictions == 0) & (true == 1)).sum()
-
-    precision = tp / (tp + fp + 1e-9)
-    recall = tp / (tp + fn + 1e-9)
-    f1 = 2 * precision * recall / (precision + recall + 1e-9)
-
-    return {"precision": precision, "recall": recall, "f1": f1}
-
 training_args = TrainingArguments(
-    output_dir="models/intent-xlmr",
+    output_dir="models/intent-xlmr-v3-training",
     eval_strategy="epoch",
     save_strategy="epoch",
     learning_rate=2e-5,
@@ -74,7 +57,10 @@ training_args = TrainingArguments(
     num_train_epochs=3,
     weight_decay=0.01,
     load_best_model_at_end=True,
-    metric_for_best_model="f1",
+    metric_for_best_model="eval_loss",
+    greater_is_better=False,
+    save_total_limit=1,
+    save_only_model=True,
     logging_steps=10,
 )
 
@@ -83,7 +69,7 @@ trainer = Trainer(
     args=training_args,
     train_dataset=train_ds,
     eval_dataset=val_ds,
-    compute_metrics=compute_metrics,
+    data_collator=DataCollatorWithPadding(tokenizer=tokenizer),
 )
 
 trainer.train()

@@ -42,7 +42,7 @@ class IndicPulseHandler(SimpleHTTPRequestHandler):
             self.path = "/index.html"
             return super().do_GET()
 
-        if self.path == "/api/status":
+        if self.path in {"/api/status", "/status"}:
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
@@ -60,7 +60,7 @@ class IndicPulseHandler(SimpleHTTPRequestHandler):
         return super().do_GET()
 
     def do_POST(self):
-        if self.path == "/api/predict":
+        if self.path in {"/api/predict", "/predict"}:
             content_length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(content_length).decode("utf-8")
 

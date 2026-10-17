@@ -3,7 +3,7 @@
 ## Goal
 
 Identify the communicative purpose of everyday English,
-Hinglish, and Punglish messages.
+Hindi/Hinglish, and Punjabi/Punglish messages.
 
 These are provisional categories. We will test them on a
 small manually reviewed sample before building a dataset.
@@ -97,12 +97,12 @@ If the meaning is unclear or requires missing context:
 
 ## Language Rules
 
-- English: English text.
-- Hinglish: Hindi and English mixed within the message.
-- Punglish: Punjabi and English mixed within the message.
-
-Romanized Hindi or Punjabi alone is not automatically code-mixed.
-Flag uncertain language assignments for review.
+Assign the label by the primary language carrying the message. English is
+primarily English; Hinglish is primarily Hindi, including Romanized Hindi;
+Punglish is primarily Punjabi, including Romanized Punjabi. English words may
+appear in either Hindi or Punjabi messages. If Hindi and Punjabi are both
+substantial and neither is clearly primary, flag the language as uncertain for
+review. Script alone does not determine the language.
 
 ## Pilot Record Format
 

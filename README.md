@@ -26,9 +26,11 @@ IndicPulse is an NLP research project for identifying English, Hinglish, and Pun
 ### Intent Classification (Multi-Label)
 
 - Classes: `Question`, `Request`, `Complaint`, `Opinion`, `Other` (multi-label delimiter: `|`)
-- Dataset: 400 manually annotated real messages (280 train / 60 validation / 60 test) across English, Hinglish, and Punglish + 86 synthetic benchmark samples
+- Candidate dataset: `data/processed/intent_training_candidates.csv` contains 978 reviewed rows from the prior set and the v3 addition. Seven reviewed ambiguous examples have empty intent lists and are included as all-zero multi-label examples.
 - Model: Fine-tuned `xlm-roberta-base` with multi-label binary cross-entropy loss
-- Test micro F1 (calibrated threshold ~0.24-0.30): ~0.40 - 0.43 (baseline zero-shot on synthetic smoke test: 0.59)
+- Current data split: 684 train / 147 validation / 147 test. The v3 model was fine-tuned for 3 epochs; the best validation loss was 0.3186.
+- With per-label thresholds selected on validation, the held-out test score is 0.7652 micro F1 and 0.7658 macro F1. Per-label test F1: Complaint 0.6824, Opinion 0.6667, Other 0.7692, Question 0.9231, Request 0.7879. These results estimate performance on this split and do not guarantee accuracy on future user messages.
+- Validation-selected thresholds: Complaint 0.34, Opinion 0.27, Other 0.27, Question 0.29, Request 0.32.
 
 ## Unified Multi-Module Pipeline
 
@@ -86,6 +88,18 @@ Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
+
+### Web app
+
+The recommended server is the FastAPI app:
+
+```powershell
+.\run_api.bat
+```
+
+Set `GEMINI_API_KEY` in a local `.env` file to enable Gemini fallback. Without a key, the local classifiers still run; if a fallback is needed, the interface reports that Gemini is unavailable. Set `GEMINI_MODEL` only if you want to override the default `gemini-3.8-flash`.
+
+Each result reports its source. Low-confidence or closely tied language scores, strong Romanized Punjabi cues, intent scores near a decision threshold, and missing local emotion cues trigger one Gemini fallback request. An exact match keeps the local result and its source attribution; a disagreement replaces only a field marked uncertain. Missing local emotion cues are supplied by Gemini. Intent bars show scores from the same source as the final intent labels: local XLM-R scores for local labels or Gemini confidence estimates when Gemini supplies the intent. Neither is a calibrated probability. Detailed output includes the active local intent thresholds to help identify a server that has not been restarted after a model update. Gemini output is schema-constrained and checked against supported labels; invalid output or an API failure leaves local predictions in place. This validation prevents malformed labels but cannot guarantee semantic correctness.
 
 ## Dataset Attribution
 
