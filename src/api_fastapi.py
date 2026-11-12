@@ -50,7 +50,7 @@ def get_status():
     return {
         "status": "online",
         "modules": {
-            "language": "IndicCMix TF-IDF (≈99.7% accuracy)",
+            "language": "IndicCMix TF-IDF (≈99.13% validation accuracy)",
             "emotion": "EmoHinD-58K Baseline (≈64.7% accuracy)",
             "intent": "Fine-Tuned XLM-RoBERTa (calibrated thresholds)",
         },

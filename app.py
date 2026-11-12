@@ -49,7 +49,7 @@ class IndicPulseHandler(SimpleHTTPRequestHandler):
             status_data = {
                 "status": "online",
                 "modules": {
-                    "language": "IndicCMix TF-IDF (99.7% Accuracy)",
+                    "language": "IndicCMix TF-IDF (99.13% validation accuracy)",
                     "emotion": "EmoHinD-58K Baseline (64.7% Accuracy)",
                     "intent": "Fine-Tuned XLM-RoBERTa (Calibrated)",
                 },
