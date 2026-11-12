@@ -518,96 +518,67 @@
       }
     }
   </style>
+  <style>
+    :root{color-scheme:light;--bg:#f5f2e9;--line:#ded9ca;--muted:#77776d;--text:#252b24;--purple:#4f6c48;--cyan:#b85a3c;--green:#53724c;--amber:#9d681d}
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif}
+    .shell{max-width:1160px;padding:26px 24px 50px}
+    .top{margin-bottom:44px}.logo{background:#dce4d2;color:#34472e;border:1px solid #c8d3bc;border-radius:50%;font-family:serif;font-size:23px}
+    .brand b{font-family:'Space Grotesk',sans-serif;color:#253123}.brand span{color:#77776d}
+    .status{border-color:#ded9ca;background:#fbfaf6;color:#77776d}.dot{background:#a3a393}
+    h1{font:600 clamp(32px,5vw,55px)/1.04 'Space Grotesk',sans-serif;letter-spacing:-2px;max-width:800px;margin-bottom:14px}
+    .grad{background:none;color:#54764b}.lede{font-size:15px;max-width:58ch;color:#6d7066;margin-bottom:32px}
+    .layout{display:grid;grid-template-columns:1fr;gap:20px;align-items:start}
+    .card{background:#fbfaf6;border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 24px #403c2a0a;padding:22px}
+    .label{color:#77776d;font-size:10px;letter-spacing:1.4px}.input-card{position:static}
+    textarea{height:104px;background:#fffefa;color:#252b24;border:1px solid #d7d2c4;font-size:16px;resize:vertical}
+    textarea:focus{border-color:#829575;box-shadow:0 0 0 3px #82957520}
+    .inrow{display:block}.samples{margin:14px 0 20px;gap:7px}.sample{background:#f2f0e8;color:#55594f;border:1px solid #e0dccf;border-radius:999px;padding:7px 10px;font-size:11px}
+    .sample:hover,.sample.active{background:#e7ecdf;color:#3d5738;border-color:#b6c5aa}
+    .go{justify-content:space-between;align-items:center}.meta{color:#8a897f}.primary{border:0;border-radius:999px;background:#425d3d;color:#fff;padding:11px 18px;font-weight:600}.primary:hover{background:#334a30}.primary:disabled{opacity:.6}
+    .msg{color:#77776d}.msg.err{color:#a54436}
+    .results{display:block;margin:0}.result-summary{background:#e8ecdf;border:1px solid #d4ddca;border-radius:18px;padding:22px 24px;margin-bottom:14px;min-height:130px}
+    .eyebrow{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#63765b;font-weight:700}.result-summary h2{font:600 22px/1.2 'Space Grotesk',sans-serif;margin:8px 0 7px}.result-summary p{color:#6d7066;margin:0;font-size:13px;max-width:62ch}
+    .insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.panel{height:auto;min-height:220px;padding:20px}.phead{margin-bottom:18px}.pico{border-radius:50%;background:#e7ecdf;color:#4c6844}.panel:nth-child(2) .pico{background:#f5e7dc;color:#a45136}.panel:nth-child(3) .pico{background:#e8ece7;color:#52695b}.phead h2{font:600 13px 'DM Sans',sans-serif;color:#696b61}.big{height:auto;min-height:34px;font:600 25px/1.15 'Space Grotesk',sans-serif;color:#293329}.big.dim{color:#aaa99e}.tagline{height:22px;margin:5px 0 10px}.tag{border-color:#ded9ca;color:#77776d}.tag.warn{color:#9d681d;border-color:#e5cfaa;background:#f8f0df}.src{font-size:11px;color:#77776d;min-height:30px}.rows{gap:8px}.row{grid-template-columns:70px 1fr 40px;color:#77776d;font-size:11px}.row.hit{color:#343c32}.track{background:#ebe8df}.fill{background:var(--c,#829575)}.row.hit .fill{background:var(--c,#58764e)}.tick{background:#77776d}.num{color:#85847a}.note{font-size:10px;color:#89887d;min-height:36px;padding-top:10px}
+    .fallback{margin:12px 2px 0;color:#77776d;font-size:11px;min-height:18px}.detail-box{margin-top:22px;border-top:1px solid #ded9ca;padding-top:16px}details{margin:0}summary{color:#6d7066}pre,.ep input{background:#f4f2eb;color:#53574e;border-color:#ded9ca}footer{color:#85847a;margin-top:36px;border-top:1px solid #ded9ca;padding-top:14px}
+    @media(max-width:820px){.insight-grid{grid-template-columns:1fr 1fr}.top{margin-bottom:32px}}
+    @media(max-width:560px){.shell{padding:18px 14px 36px}.insight-grid{grid-template-columns:1fr}.result-summary{padding:18px}.status span.t{display:inline}}
+  </style>
 </head>
 
 <body>
   <main class="shell">
     <header class="top">
-      <div class="brand">
-        <div class="logo">∿</div>
-        <div><b>IndicPulse</b><span>Multilingual text understanding</span></div>
-      </div>
-      <div class="status"><span class="dot" id="dot"></span><span class="t" id="status">Pipeline not checked yet</span>
-      </div>
+      <div class="brand"><div class="logo">इ</div><div><b>IndicPulse</b><span>Language, feeling, intent</span></div></div>
+      <div class="status"><span class="dot" id="dot"></span><span class="t" id="status">Checking local pipeline…</span></div>
     </header>
-
-    <h1>Text that speaks many languages. <span class="grad">One place to understand it.</span></h1>
-    <p class="lede">Type an English, Hinglish or Punglish message. Three separate modules read it: language, emotion and
-      intent.</p>
-
-    <section class="card">
-      <label class="label" for="message">Input message</label>
-      <textarea id="message" maxlength="2000"
-        placeholder="Type English, Hinglish, or Punglish text…">Mera refund abhi tak nahi aaya, bahut gussa hai.</textarea>
-      <div class="inrow">
+    <h1>Read the meaning<br><span class="grad">between languages.</span></h1>
+    <p class="lede">A small exploration of how people express themselves across English, Hindi and Punjabi—in their own words.</p>
+    <div class="layout">
+      <section class="card input-card">
+        <label class="label" for="message">Try a message</label>
+        <textarea id="message" maxlength="2000" placeholder="Write in English, Hinglish or Punglish…">Mera refund abhi tak nahi aaya, bahut gussa hai.</textarea>
         <div class="samples">
-          <button class="sample active" type="button"
-            data-text="Mera refund abhi tak nahi aaya, bahut gussa hai.">Hinglish complaint</button>
-          <button class="sample" type="button" data-text="Kal exam kinne vaje aa?">Punglish question</button>
-          <button class="sample" type="button" data-text="Could you please cancel my order?">English request</button>
+          <button class="sample active" type="button" data-text="Mera refund abhi tak nahi aaya, bahut gussa hai.">Hinglish · complaint</button>
+          <button class="sample" type="button" data-text="Kal exam kinne vaje aa?">Punglish · question</button>
+          <button class="sample" type="button" data-text="Could you please cancel my order?">English · request</button>
         </div>
-        <div class="go">
-          <span class="meta" id="meta">0 / 2000</span>
-          <button class="primary" id="analyze" type="button">Analyze message</button>
+        <div class="go"><span class="meta" id="meta">0 / 2000</span><button class="primary" id="analyze" type="button">Read this message →</button></div>
+        <div class="msg" id="msg" role="status"></div>
+      </section>
+      <section aria-label="Analysis results">
+        <div class="result-summary" aria-live="polite"><div class="eyebrow">A closer read</div><h2 id="summary">Your reading will appear here.</h2><p id="summary-note">Try one of the examples, or write a message in your own words.</p></div>
+        <div class="results" id="results" aria-live="polite">
+          <div class="insight-grid">
+            <article class="card panel"><div class="phead"><div class="pico">文</div><h2>Language</h2></div><div class="big dim" id="lang">—</div><div class="tagline"><span class="tag" id="langtag"></span></div><div class="src" id="langsrc">Waiting for a result.</div><div class="rows" id="langrows"></div><div class="note">Language scores come from the local model. Close scores may be checked by Gemini.</div></article>
+            <article class="card panel"><div class="phead"><div class="pico">♡</div><h2>Feeling</h2></div><div class="big dim" id="emo">—</div><div class="src" id="emosrc">Waiting for a result.</div><div class="note">Emotion reading uses local cues or the Hindi model, with Gemini fallback when available.</div></article>
+            <article class="card panel"><div class="phead"><div class="pico">↗</div><h2>What it’s doing</h2></div><div class="big dim" id="intlabel">—</div><div class="tagline"><span class="legendline" id="intentlegend">Local label scores</span></div><div class="src" id="intsrc">Waiting for a result.</div><div class="rows" id="introws"></div><div class="note" id="intnote">Intent scores are model estimates, not calibrated probabilities.</div></article>
+          </div>
         </div>
-      </div>
-      <div class="msg" id="msg" role="status"></div>
-    </section>
-
-    <section class="results" id="results" aria-live="polite">
-      <article class="card panel">
-        <div class="phead">
-          <div class="pico">◎</div>
-          <h2>Language</h2>
-        </div>
-        <div class="big dim" id="lang">—</div>
-        <div class="tagline"><span class="tag" id="langtag"></span></div>
-        <div class="src" id="langsrc">Waiting for a result.</div>
-        <div class="rows" id="langrows"></div>
-        <div class="note">The label and score bars are local; close scores are treated as uncertain and may be checked by Gemini.</div>
-      </article>
-
-      <article class="card panel">
-        <div class="phead">
-          <div class="pico">♡</div>
-          <h2>Emotion</h2>
-        </div>
-        <div class="big dim" id="emo">—</div>
-        <div class="src" id="emosrc">Waiting for a result.</div>
-        <div class="note">Roman-script text is matched against a keyword list. Devanagari text goes to a trained Hindi
-          model. Only eight emotion labels exist, so other emotions can't be reported.</div>
-      </article>
-
-      <article class="card panel">
-        <div class="phead">
-          <div class="pico">⌘</div>
-          <h2>Intent</h2>
-        </div>
-        <div class="big dim" id="intlabel">—</div>
-        <div class="tagline"><span class="legendline" id="intentlegend">Tick = local threshold · dot = crossed it</span></div>
-        <div class="src" id="intsrc">Waiting for a result.</div>
-        <div class="rows" id="introws"></div>
-        <div class="note" id="intnote">Bars show local XLM-R scores. These scores are not calibrated probabilities.</div>
-      </article>
-    </section>
-    <div class="legendline" id="fallbackmsg" role="status"></div>
-
-    <details>
-      <summary>Developer details</summary>
-      <div class="dev">
-        <div>
-          <div class="label">Request</div>
-          <pre id="req"></pre>
-        </div>
-        <div>
-          <div class="label">Raw response</div>
-          <pre id="raw">No response yet.</pre>
-        </div>
-      </div>
-      <div class="ep"><label for="ep">Endpoint</label><input id="ep" value="/predict" spellcheck="false"></div>
-    </details>
-
-    <footer><span>INDICPULSE</span><span>Results come only from your running pipeline</span></footer>
+        <div class="fallback" id="fallbackmsg" role="status"></div>
+      </section>
+    </div>
+    <div class="detail-box"><details><summary>Developer details</summary><div class="dev"><div><div class="label">Request</div><pre id="req"></pre></div><div><div class="label">Raw response</div><pre id="raw">No response yet.</pre></div></div><div class="ep"><label for="ep">Endpoint</label><input id="ep" value="/predict" spellcheck="false"></div></details></div>
+    <footer><span>INDICPULSE · EXPERIMENTAL</span><span>Predictions can be wrong; explore them as a prototype.</span></footer>
   </main>
 
   <script>
@@ -661,6 +632,10 @@
     }
     function render(d) {
       const det = d.details || {}, ls = det.language_scores || {}, sc = det.intent_scores || {};
+      const detectedIntents = d.intent || [];
+      $('summary').textContent = [d.language || 'Language unclear', detectedIntents.length ? detectedIntents.join(' + ') : 'No clear intent'].join('  ·  ');
+      const feelingText = d.emotion && d.emotion !== 'Neutral' ? ' The expressed feeling may be ' + d.emotion.toLowerCase() + '.' : '';
+      $('summary-note').textContent = 'A prototype reading of the message’s language and purpose.' + feelingText + ' Check the source labels below; predictions can be wrong.';
       const top = Math.max(0, ...Object.values(ls));
       setBig('lang', d.language || 'Unknown', !d.language);
       const tag = $('langtag');
@@ -686,7 +661,8 @@
       const fallbackMessages = {
         not_needed: 'Gemini fallback was not needed; local predictions are shown.',
         unavailable: fb.reason === 'missing_api_key' ? 'Gemini fallback was needed, but GEMINI_API_KEY is not configured; local predictions are shown.' : 'Gemini fallback is unavailable; local predictions are shown.',
-        failed: 'Gemini request failed; local predictions are shown.',
+        timed_out: 'Gemini took too long; local predictions are shown.',
+        failed: fb.reason === 'ServerError' ? 'Gemini returned a temporary server error; local predictions are shown.' : 'Gemini request failed; local predictions are shown.',
         rejected_invalid_response: 'Gemini returned labels outside the supported format; local predictions are shown.'
       };
       if (fb.status === 'succeeded') {
@@ -710,6 +686,15 @@
     function refresh() {
       $('meta').textContent = message.value.length + ' / 2000';
       $('req').textContent = JSON.stringify({ text: message.value, message: message.value }, null, 2);
+    }
+    async function checkStatus() {
+      try {
+        const res = await fetch('/status');
+        if (!res.ok) throw new Error('status ' + res.status);
+        setStatus(true, 'Local pipeline ready');
+      } catch (_) {
+        setStatus(false, 'Pipeline not reachable');
+      }
     }
     async function analyze() {
       const text = message.value.trim();
@@ -736,6 +721,7 @@
     btn.addEventListener('click', analyze);
     message.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyze() });
     refresh();
+    checkStatus();
   </script>
 </body>
 

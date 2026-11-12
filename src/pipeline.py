@@ -17,8 +17,10 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import os
 try:
     from google import genai
+    from google.genai import types as genai_types
 except ImportError:
     genai = None
+    genai_types = None
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -187,7 +189,7 @@ class IntentModule:
         self.thresholds = thresholds or DEFAULT_THRESHOLDS
         # Gemini is an optional fallback. The local pipeline must still start
         # when the API key is absent or the client cannot be initialized.
-        self._gemini_model_name = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+        self._gemini_model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
         self._gemini_api_key = os.getenv("GEMINI_API_KEY")
         self._gemini_client = None
         self._gemini_client_error = False
@@ -195,7 +197,16 @@ class IntentModule:
         if self._gemini_api_key:
             if genai is not None:
                 try:
-                    self._gemini_client = genai.Client(api_key=self._gemini_api_key)
+                    # Bound fallback wait so a slow remote response cannot hold
+                    # the interactive demo open indefinitely.
+                    http_options = genai_types.HttpOptions(
+                        timeout=10000,
+                        retry_options=genai_types.HttpRetryOptions(attempts=1),
+                    )
+                    self._gemini_client = genai.Client(
+                        api_key=self._gemini_api_key,
+                        http_options=http_options,
+                    )
                 except Exception:
                     self._gemini_client_error = True
 
@@ -377,8 +388,12 @@ class IndicPulsePipeline:
                     fallback["reason"] = str(exc)
                 except Exception as exc:
                     # Keep the validated local predictions when the API is down.
-                    fallback["status"] = "failed"
-                    fallback["reason"] = type(exc).__name__
+                    if "timeout" in type(exc).__name__.lower() or "timeout" in str(exc).lower():
+                        fallback["status"] = "timed_out"
+                        fallback["reason"] = "gemini_timeout"
+                    else:
+                        fallback["status"] = "failed"
+                        fallback["reason"] = type(exc).__name__
 
         source = {
             "language": language_source,
@@ -477,24 +492,13 @@ class IndicPulsePipeline:
             "model": self.intent_module._gemini_model_name,
             "contents": prompt,
             "config": {
-                "temperature": 0,
+                # Gemini 3.x uses thinking_level instead of sampling controls.
+                "thinking_config": {"thinking_level": "low"},
                 "response_mime_type": "application/json",
                 "response_json_schema": schema,
             },
         }
-        for attempt in range(2):
-            try:
-                response = self.intent_module._gemini_client.models.generate_content(**request_args)
-                break
-            except Exception as exc:
-                status_code = getattr(exc, "status_code", None)
-                is_server_error = type(exc).__name__ == "ServerError" or (
-                    isinstance(status_code, int) and status_code >= 500
-                )
-                if attempt == 0 and is_server_error:
-                    time.sleep(1)
-                    continue
-                raise
+        response = self.intent_module._gemini_client.models.generate_content(**request_args)
         try:
             parsed = json.loads(response.text or "")
         except (TypeError, json.JSONDecodeError) as exc:
