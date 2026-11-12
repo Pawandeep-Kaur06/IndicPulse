@@ -1,113 +1,169 @@
 # IndicPulse
 
-IndicPulse is an experimental NLP research prototype for analyzing English, Hinglish, and Punglish messages. It combines language identification, emotion recognition, and multi-label intent classification in a local pipeline, with an optional Gemini fallback.
+IndicPulse is an experimental NLP prototype for analyzing English, Hinglish, and Punglish messages. It combines language identification, emotion recognition, and multi-label intent classification in a local pipeline, with an optional Google Gemini fallback for selected uncertain cases.
 
-## Current Progress
+The project is a research and demonstration prototype. Its reported metrics come from specific validation and test splits and do not guarantee accuracy on new messages.
 
-### Emotion Classification
+## System architecture
 
-- Source dataset: EmoHinD-58K
-- Source task: Multi-label, fine-grained Hindi emotion recognition
-- Baseline subset: 8 single-label emotion classes
-- Classes: admiration, amusement, anger, annoyance, approval, gratitude, love, neutral
-- Model: Character-level TF-IDF + Logistic Regression with balanced class weights
-- Validation accuracy: 64.69%
-- Validation macro F1: 0.6093
-- Note: Multi-label examples and rare-label examples were excluded from this first baseline. In the application, Devanagari text can use this Hindi model; Roman-script emotion detection primarily uses a keyword lexicon, so it is not covered by this validation score.
-
-### Language Identification
-
-- Classes: English, Hinglish, Punglish
-- Dataset: AI4Bharat IndicCMix
-- Model: Character-level TF-IDF + Logistic Regression
-- Validation accuracy: 99.13%
-- Validation macro F1: 0.9913
-- These are reported validation-split results, not a guarantee of accuracy on future messages.
-
-### Intent Classification (Multi-Label)
-
-- Classes: `Question`, `Request`, `Complaint`, `Opinion`, `Other` (multi-label delimiter: `|`)
-- Candidate dataset: `data/processed/intent_training_candidates.csv` contains 978 labeled rows: 580 marked synthetic and 398 existing candidates. Seven reviewed ambiguous examples have empty intent lists and are included as all-zero multi-label examples.
-- Model: Fine-tuned `xlm-roberta-base` with multi-label binary cross-entropy loss
-- Current data split: 684 train / 147 validation / 147 test. The v3 model was fine-tuned for 3 epochs; the best validation loss was 0.3186.
-- With per-label thresholds selected on validation, the held-out test score is 0.7652 micro F1 and 0.7658 macro F1. Per-label test F1: Complaint 0.6824, Opinion 0.6667, Other 0.7692, Question 0.9231, Request 0.7879. These results estimate performance on this split and do not guarantee accuracy on future user messages.
-- Validation-selected thresholds: Complaint 0.34, Opinion 0.27, Other 0.27, Question 0.29, Request 0.32.
-
-## Unified Multi-Module Pipeline
-
-IndicPulse combines Language Identification, Emotion Recognition, and Intent Classification into a single local pipeline. Gemini is an optional fallback for uncertain cases when configured:
-
-```python
-from src.pipeline import IndicPulsePipeline
-
-pipeline = IndicPulsePipeline()
-result = pipeline.predict("Mera refund abhi tak nahi aaya, bahut gussa hai.")
-print(result)
+```mermaid
+flowchart LR
+    A[English / Hinglish / Punglish message] --> B[Local language identification]
+    A --> C[Local emotion analysis]
+    A --> D[Local multi-label intent model]
+    C --> C1{Script and local cue}
+    C1 -->|Devanagari| C2[Hindi emotion model]
+    C1 -->|Roman script| C3[Emotion keyword lexicon]
+    B --> E{Fallback condition met?}
+    C --> E
+    D --> E
+    E -->|No| G[Prediction with source attribution]
+    E -->|Yes and API configured| F[Gemini structured-output fallback]
+    F --> H[Validate labels and replace only uncertain fields]
+    H --> G
+    E -->|Unavailable or error| G
 ```
 
-Output:
-```json
-{
-  "message": "Mera refund abhi tak nahi aaya, bahut gussa hai.",
-  "language": "Hinglish",
-  "emotion": "Anger",
-  "intent": ["Complaint", "Question"]
-}
-```
-This is an illustrative example; predictions can differ by model version, thresholds, and Gemini availability.
+The fallback is driven by explicit heuristics, not a general out-of-distribution detector. It can run when the language score is low or closely tied, a Romanized Punjabi cue is detected, an intent score is low or near its threshold, or the local emotion module finds no cue. Gemini responses are constrained to the supported label schema and validated before use. A response replaces only fields marked uncertain; local outputs remain available if Gemini is missing, times out, or fails validation.
 
-### CLI Usage
+## Modules and reported performance
 
-Analyze a single message:
-```bash
-python scripts/run_pipeline.py --message "Mera refund abhi tak nahi aaya, bahut gussa hai."
-```
+### Language identification
 
-Interactive mode:
-```bash
-python scripts/run_pipeline.py --interactive
-```
+- **Classes:** English, Hinglish, Punglish
+- **Dataset:** AI4Bharat IndicCMix
+- **Model:** character n-gram TF-IDF with Logistic Regression
+- **Reported validation accuracy:** **99.13%**
+- **Reported validation macro F1:** **0.9913**
 
-Run demo across English, Hinglish, and Punglish:
-```bash
-python scripts/run_pipeline.py --demo
-```
+These are results on the project’s validation split, not a guarantee for future messages. The `/status` endpoints report the same validation accuracy.
 
-## Setup
+### Emotion recognition
 
-```bash
-python -m venv .venv
-```
+- **Dataset:** EmoHinD-58K, filtered for the initial single-label baseline
+- **Eight baseline classes:** admiration, amusement, anger, annoyance, approval, gratitude, love, neutral
+- **Baseline model:** character-level TF-IDF with class-balanced Logistic Regression
+- **Reported validation accuracy:** **64.69%**
+- **Reported validation macro F1:** **0.6093**
 
-Windows PowerShell:
+The first baseline excluded multi-label and rare-label examples. In the running application, Devanagari messages can use the Hindi model. Roman-script emotion recognition primarily uses a keyword lexicon; the validation metrics above do not measure that lexicon path. The lexicon can miss emotion expressed through unfamiliar wording, context, or spelling variation.
+
+### Multi-label intent classification
+
+- **Labels:** `Question`, `Request`, `Complaint`, `Opinion`, `Other`
+- **Candidate set:** 978 labeled rows in `data/processed/intent_training_candidates.csv`: 580 marked synthetic and 398 existing candidates. Seven reviewed ambiguous examples have empty intent lists and are represented as all-zero labels.
+- **Training split:** 684 train / 147 validation / 147 test
+- **Model:** fine-tuned `xlm-roberta-base` with multi-label binary cross-entropy loss
+- **Training:** 3 epochs; best reported validation loss **0.3186**
+- **Reported held-out test micro F1:** **0.7652**
+- **Reported held-out test macro F1:** **0.7658**
+
+Per-label thresholds were selected on validation data. The reported test F1 and thresholds are:
+
+| Intent | Threshold | Test F1 |
+| --- | ---: | ---: |
+| Question | 0.29 | 0.9231 |
+| Request | 0.32 | 0.7879 |
+| Other | 0.27 | 0.7692 |
+| Complaint | 0.34 | 0.6824 |
+| Opinion | 0.27 | 0.6667 |
+
+These scores describe one held-out split. The reviewed dataset is small for five overlapping labels and does not establish performance across every language variety or real-world domain.
+
+## Intent annotation guide
+
+- **Question:** asks for information, clarification, or confirmation.
+- **Request:** asks someone to perform an action, even when phrased as a question.
+- **Complaint:** expresses dissatisfaction about a problem or unmet expectation.
+- **Opinion:** expresses an evaluation, preference, or judgment.
+- **Other:** a clear communicative purpose outside the four labels above.
+
+Multiple labels are used only when a message independently expresses multiple purposes. A question mark alone does not make an utterance a Question, and a neutral factual report is not automatically a Complaint. See [the annotation guide](docs/intent_annotation_guide.md) for examples and uncertainty rules.
+
+## Web app and API
+
+The recommended server is **FastAPI**, implemented in `src/api_fastapi.py` and started by `run_api.bat`. It serves the interface from `src/static/index.html` and exposes `GET /status` and `POST /predict`.
+
+The separate `app.py` entry point is a legacy standard-library HTTP server. It serves `public/index.html` and compatibility routes such as `/api/predict`. Both use port 8000 by default, so run only one server at a time.
+
+### Setup
 
 ```powershell
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-```
-
-Install dependencies:
-
-```bash
 pip install -r requirements.txt
 ```
 
-The requirements include FastAPI, which is needed by the recommended web server.
+FastAPI is included in `requirements.txt` for the recommended server.
 
-### Web app
+### Local data and model files
 
-The recommended server is the FastAPI app:
+Datasets and trained model artifacts are excluded from Git by `.gitignore`. A fresh clone therefore needs the local artifacts before the full pipeline can start: `models/language_tfidf_logreg.joblib` and `models/intent-xlmr-final/`. The emotion model file, `models/emotion_tfidf_logreg.joblib`, is needed for the Devanagari Hindi emotion-model path; without it, that path is unavailable. Training scripts also require the corresponding local datasets and processed splits described in `data/README.md`.
+
+### Start the FastAPI app
 
 ```powershell
 .\run_api.bat
 ```
 
-Set `GEMINI_API_KEY` in a local `.env` file to enable Gemini fallback. Without a key, the local classifiers still run; if a fallback is needed, the interface reports that Gemini is unavailable. The default fallback model is `gemini-3.5-flash-lite`; set `GEMINI_MODEL` only if you want to override it. Gemini requests use low thinking effort, a 10-second HTTP timeout, and no automatic retries. A timeout or API failure leaves the local predictions in place. Model loading at server startup is separate from this request timeout.
+Then open `http://127.0.0.1:8000`.
 
-Each result reports its source. Low-confidence or closely tied language scores, strong Romanized Punjabi cues, intent scores near a decision threshold, and missing local emotion cues trigger one Gemini fallback request. An exact match keeps the local result and its source attribution; a disagreement replaces only a field marked uncertain. Missing local emotion cues are supplied by Gemini. Intent bars show scores from the same source as the final intent labels: local XLM-R scores for local labels or Gemini confidence estimates when Gemini supplies the intent. Neither is a calibrated probability. Detailed output includes the active local intent thresholds to help identify a server that has not been restarted after a model update. Gemini output is schema-constrained and checked against supported labels; invalid output or an API failure leaves local predictions in place. This validation prevents malformed labels but cannot guarantee semantic correctness.
+### Start the legacy server
 
-## Dataset Attribution
+```powershell
+python app.py
+```
 
-- IndicCMix: AI4Bharat, via Hugging Face
-- EmoHinD-58K: `debadityashome/emohi58k-finegrained-hindi-emotion-datatext` on Hugging Face
-- MASSIVE: Amazon Alexa / Amazon Science, CC BY 4.0; used for exploratory intent-data preparation, not the current fine-tuned intent training split
-- EmoInHindi: Singh et al., LREC 2022; restricted to research use and not redistributed in this repository
+### API example
+
+```http
+POST /predict
+Content-Type: application/json
+
+{"message":"Mera refund abhi tak nahi aaya, bahut gussa hai."}
+```
+
+The response includes predicted language, emotion, intent labels, source attribution, and fallback status. Detailed output includes local language and intent scores and active intent thresholds. Scores are model outputs, not calibrated probabilities.
+
+### Gemini fallback configuration
+
+Set `GEMINI_API_KEY` in a local `.env` file to enable the fallback. The default model is `gemini-3.5-flash-lite`; `GEMINI_MODEL` can override it. Requests use low thinking effort, a 10-second HTTP timeout, and no automatic retries. If Gemini is unavailable, times out, fails, or returns invalid labels, the local predictions remain in the response. Model loading at server startup is separate from the request timeout. Keep `.env` private; it is excluded from Git.
+
+## CLI usage
+
+Analyze one message:
+
+```bash
+python scripts/run_pipeline.py --message "Mera refund abhi tak nahi aaya, bahut gussa hai."
+```
+
+Start an interactive session:
+
+```bash
+python scripts/run_pipeline.py --interactive
+```
+
+Run the built-in demo:
+
+```bash
+python scripts/run_pipeline.py --demo
+```
+
+## Data and attribution
+
+Raw datasets and processed CSV files are excluded from this repository. See [data/README.md](data/README.md) for the data policy and source fields.
+
+- **IndicCMix:** AI4Bharat, used for English, Hinglish, and Punglish language identification.
+- **EmoHinD-58K:** `debadityashome/emohi58k-finegrained-hindi-emotion-datatext` on Hugging Face, used for the Hindi emotion baseline.
+- **MASSIVE:** Amazon Alexa / Amazon Science, CC BY 4.0. The repository includes exploratory intent-data preparation utilities; MASSIVE is not used in the current fine-tuned intent training split.
+- **EmoInHindi:** Singh et al., LREC 2022. Restricted to research use and not redistributed in this repository.
+
+## Limitations and next steps
+
+- Grow and independently review representative intent examples, especially for Hinglish and Romanized Punjabi.
+- Evaluate by language variety and per-label precision, recall, and F1 on a separate human-reviewed test set.
+- Improve Roman-script emotion recognition beyond keyword matching and measure it separately from the Devanagari Hindi model.
+- Revisit thresholds only after measuring changes on held-out data.
+- Explore other Indic code-mixed varieties, such as Bengali-English or Tamil-English, as future work.
+
+Transformer-based emotion models and higher F1 targets are possible research directions, not completed work or promised outcomes.
